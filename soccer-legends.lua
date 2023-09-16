@@ -115,8 +115,8 @@ function IsInRange(part)
     local RangePart = HumanoidRootPart:FindFirstChild("RangePart")
     if RangePart == nil then return false end
     for _,v in RangePart:GetTouchingParts() do
+        if v == nil then return end
         if v.Name == part.Name then
-            print("yes")
             return true
         end
     end
