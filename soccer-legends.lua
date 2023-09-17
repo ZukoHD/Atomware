@@ -33,6 +33,9 @@ local Character = Main:NewSection("Character")
 getgenv().AutoGoal = false
 getgenv().BallAura = false
 getgenv().BallAuraVisible = false
+getgenv().WalkSpeed = 16
+getgenv().JumpPower = 50
+getgenv().AnticheatBypassed = false
 
 --// main -> autogoal
 local Goals = {
@@ -152,11 +155,11 @@ end)
 
 --// main -> character
 Character:NewSlider("Speed", "The character's speed.", 100, 16, function(s)
-    Humanoid.WalkSpeed = s
+    getgenv().WalkSpeed = s
 end)
 
 Character:NewSlider("Jump Power", "The character's jump power.", 500, 50, function(s)
-    Humanoid.JumpPower = s
+    getgenv().JumpPower = s
 end)
 
 --// fun tab sections
@@ -193,26 +196,31 @@ local Credits = Other:NewSection("Credits")
 
 --// other -> anticheat
 Anticheat:NewButton("Anticheat Bypass", "Bypasses the anticheat. Needed for certain features.", function()
-    local mt = getrawmetatable(game)
-    local old = mt.__namecall
-    local protect = newcclosure or protect_function
-
-    if not protect then
-        protect = function(f) 
-            return f 
+    if getgenv().AnticheatBypassed == false then
+        local mt = getrawmetatable(game)
+        local old = mt.__namecall
+        local protect = newcclosure or protect_function
+    
+        if not protect then
+            protect = function(f) 
+                return f 
+            end
         end
+    
+        setreadonly(mt, false)
+        mt.__namecall = protect(function(self, ...)
+        local method = getnamecallmethod()
+            if method == "Kick" then
+                wait(9e9)
+                return
+            end
+            return old(self, ...)
+        end)
+        hookfunction(Player.Kick,protect(function() 
+            wait(9e9) 
+        end))
+        getgenv().AnticheatBypassed = true
     end
-
-    setreadonly(mt, false)
-    mt.__namecall = protect(function(self, ...)
-    local method = getnamecallmethod()
-        if method == "Kick" then
-            wait(9e9)
-            return
-        end
-        return old(self, ...)
-    end)
-    hookfunction(game:GetService("Players").LocalPlayer.Kick,protect(function() wait(9e9) end))
 end)
 
 --// other -> credits
@@ -235,5 +243,12 @@ RunService.Heartbeat:Connect(function(deltaTime)
         GetBallOwnership()
         if GetBall() == nil then return end
         GetBall().CFrame = CFrame.new(Mouse.Hit.Position.X, Mouse.Hit.Position.Y, Mouse.Hit.Position.Z)
+    end
+
+    if getgenv().AnticheatBypassed then
+        if Player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("M"):WaitForChild("Countdown").Visible then return end
+        Humanoid = Character:WaitForChild("Humanoid")
+        Humanoid.WalkSpeed = getgenv().WalkSpeed
+        Humanoid.JumpPower = getgenv().JumpPower
     end
 end)
