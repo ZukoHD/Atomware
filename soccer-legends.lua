@@ -118,7 +118,8 @@ function IsInRange(part)
     local RangePart = HumanoidRootPart:FindFirstChild("RangePart")
     if RangePart == nil then return false end
     for _,v in RangePart:GetTouchingParts() do
-        if v == nil then return end
+        if v == nil then return false end
+        if part == nil then return false end
         if v.Name == part.Name then
             return true
         end
@@ -141,12 +142,16 @@ BallAura:NewToggle("Ball Aura", "Whether or not Ball Aura is enabled.", function
     end
 end)
 
-BallAura:NewSlider("Range", "The range for Ball Aura", 50, 1, function(s)
-    UpdateRange(Vector3.new(s, GetRangeSize().Y, s))
+BallAura:NewSlider("Range Width", "The range width for Ball Aura", 250, 1, function(s)
+    UpdateRange(Vector3.new(s, GetRangeSize().Y, GetRangeSize().Z))
 end)
 
-BallAura:NewSlider("Range Height", "The range height for Ball Aura", 250, 10, function(s)
+BallAura:NewSlider("Range Height", "The range height for Ball Aura", 250, 1, function(s)
     UpdateRange(Vector3.new(GetRangeSize().X, s, GetRangeSize().Z))
+end)
+
+BallAura:NewSlider("Range Length", "The range length for Ball Aura", 250, 1, function(s)
+    UpdateRange(Vector3.new(GetRangeSize().X, GetRangeSize().Y, s))
 end)
 
 BallAura:NewToggle("Visual Range", "Whether or not the range is visible.", function(state)
@@ -247,7 +252,10 @@ RunService.Heartbeat:Connect(function(deltaTime)
 
     if getgenv().AnticheatBypassed then
         if Player:WaitForChild("PlayerGui"):WaitForChild("UI"):WaitForChild("M"):WaitForChild("Countdown").Visible then return end
-        Humanoid = Character:WaitForChild("Humanoid")
+        if Humanoid == nil then
+            if Character == nil then Character = workspace:WaitForChild(Player.Name) end
+            Humanoid = Character:WaitForChild("Humanoid")
+        end
         Humanoid.WalkSpeed = getgenv().WalkSpeed
         Humanoid.JumpPower = getgenv().JumpPower
     end
